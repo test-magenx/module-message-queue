@@ -5,52 +5,46 @@
  */
 namespace Magento\MessageQueue\Model\ResourceModel;
 
-use DateInterval;
-use DateTime;
-use Magento\Framework\MessageQueue\Lock\ReaderInterface;
-use Magento\Framework\MessageQueue\Lock\WriterInterface;
-use Magento\Framework\MessageQueue\LockInterface;
-use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
-use Magento\Framework\Model\ResourceModel\Db\Context;
-use Magento\MessageQueue\Model\LockFactory;
+use \Magento\Framework\MessageQueue\Lock\ReaderInterface;
+use \Magento\Framework\MessageQueue\Lock\WriterInterface;
 
 /**
  * Class Lock to handle database lock table db transactions.
  */
-class Lock extends AbstractDb implements ReaderInterface, WriterInterface
+class Lock extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb implements ReaderInterface, WriterInterface
 {
     /**#@+
      * Constants
      */
-    public const QUEUE_LOCK_TABLE = 'queue_lock';
+    const QUEUE_LOCK_TABLE = 'queue_lock';
     /**#@-*/
 
     /**#@-*/
     private $dateTime;
 
     /**
-     * @var LockFactory
+     * @var \Magento\MessageQueue\Model\LockFactory
      */
     private $lockFactory;
 
     /**
-     * @var int
+     * @var integer
      */
     private $interval;
 
     /**
      * Initialize dependencies.
      *
-     * @param Context $context
+     * @param \Magento\Framework\Model\ResourceModel\Db\Context $context
      * @param \Magento\Framework\Stdlib\DateTime\DateTime $dateTime
-     * @param LockFactory $lockFactory
-     * @param ?string $connectionName
-     * @param int $interval
+     * @param \Magento\MessageQueue\Model\LockFactory $lockFactory
+     * @param null $connectionName
+     * @param integer $interval
      */
     public function __construct(
-        Context $context,
+        \Magento\Framework\Model\ResourceModel\Db\Context $context,
         \Magento\Framework\Stdlib\DateTime\DateTime $dateTime,
-        LockFactory $lockFactory,
+        \Magento\MessageQueue\Model\LockFactory $lockFactory,
         $connectionName = null,
         $interval = 86400
     ) {
@@ -61,7 +55,7 @@ class Lock extends AbstractDb implements ReaderInterface, WriterInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritDoc}
      */
     protected function _construct()
     {
@@ -69,9 +63,9 @@ class Lock extends AbstractDb implements ReaderInterface, WriterInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritDoc}
      */
-    public function read(LockInterface $lock, $code)
+    public function read(\Magento\Framework\MessageQueue\LockInterface $lock, $code)
     {
         $object = $this->lockFactory->create();
         $object->load($code, 'message_code');
@@ -81,25 +75,23 @@ class Lock extends AbstractDb implements ReaderInterface, WriterInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritDoc}
      */
-    public function saveLock(LockInterface $lock)
+    public function saveLock(\Magento\Framework\MessageQueue\LockInterface $lock)
     {
         $object = $this->lockFactory->create();
         $object->setMessageCode($lock->getMessageCode());
         $object->setCreatedAt($this->dateTime->gmtTimestamp());
         $object->save();
-        $lock->setId($object->getId());
-        $lock->setCreatedAt($object->getCreatedAt());
     }
 
     /**
-     * @inheritdoc
+     * {@inheritDoc}
      */
     public function releaseOutdatedLocks()
     {
-        $date = (new DateTime())->setTimestamp($this->dateTime->gmtTimestamp());
-        $date->add(new DateInterval('PT' . $this->interval . 'S'));
+        $date = (new \DateTime())->setTimestamp($this->dateTime->gmtTimestamp());
+        $date->add(new \DateInterval('PT' . $this->interval . 'S'));
         $this->getConnection()->delete($this->getTable(self::QUEUE_LOCK_TABLE), ['created_at <= ?' => $date]);
     }
 }
